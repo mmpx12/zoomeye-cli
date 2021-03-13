@@ -4,7 +4,7 @@ This can be use with **or** without api key.
 
 For usage without api chrome or chromiu is required (will run in headless mode), It also tke more time (aroude 20/25 seconds)
 
-For the moment you can only search for ip. hostname and cidr search will come later.
+hostname search will come later.
 
 ## API usages:
 
@@ -79,10 +79,11 @@ zoomeye-cli -noapi -ip <ip>
 ```sh
 git clone git@github.com:mmpx12/zoomeye-cli.git
 cd zoomeye-cli
-go build
 
-#Optionnal
-sudo cp zoomeye-cli /usr/bin/zoomeye-cli
+make 
+sudo make install 
+# or 
+sudo make all
 ```
 
 

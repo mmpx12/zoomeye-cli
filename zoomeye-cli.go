@@ -5,12 +5,14 @@ import (
   "fmt"
   "os"
   . "zoomeye-cli/api"
+  . "zoomeye-cli/cidr"
   . "zoomeye-cli/noapi"
 )
 
 func main() {
   key := flag.String("init", "none", "your zoomeye api key")
   ip := flag.String("ip", "none", "Ip to search")
+  cidr := flag.String("cidr", "none", "Cidr to scan")
   info := flag.Bool("info", false, "info about your account")
   noapi := flag.Bool("noapi", false, "Use zoomeye without api key")
   flag.Parse()
@@ -28,9 +30,22 @@ func main() {
     os.Exit(0)
   }
   if *ip != "none" {
-    x := ApiCall(ip)
-    ParseApi(x)
+    x, y := ApiCall(*ip)
+    if x {
+      ParseApi(y)
+    }
     os.Exit(0)
+  }
+  if *cidr != "none" {
+    ips := Cidr_to_ip(*cidr)
+    for _, ip := range ips {
+      fmt.Println("\033[38;5;118mIP:       \t\033[33m" + ip)
+      x, y := ApiCall(ip)
+      if x {
+        ParseApi(y)
+      }
+      fmt.Println("\n")
+    }
   }
   if *info {
     GetInfo()

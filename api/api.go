@@ -31,9 +31,9 @@ func CreateApiFile(api *string) {
   f.WriteString(*api)
 }
 
-func ApiCall(ip *string) []byte {
+func ApiCall(ip string) (bool, []byte) {
   apikey := GetApiKey()
-  req, _ := http.NewRequest("GET", "https://api.zoomeye.org/host/search?query=cidr:"+*ip+"/32", nil)
+  req, _ := http.NewRequest("GET", "https://api.zoomeye.org/host/search?query=cidr:"+ip+"/32", nil)
   req.Header.Set("API-KEY", apikey)
   client := &http.Client{}
   resp, _ := client.Do(req)
@@ -42,14 +42,14 @@ func ApiCall(ip *string) []byte {
   if checkerr {
     fmt.Println("Error:")
     fmt.Println(string(content))
-    os.Exit(1)
+    return false, content
   }
   noport := bytes.Contains(content, []byte(`{"total": 0, "available": 0,`))
   if noport {
     fmt.Println("Nothing found.")
-    os.Exit(0)
+    return false, content
   }
-  return content
+  return true, content
 }
 
 func ParseApi(raw []byte) {

@@ -33,10 +33,16 @@ Credits: 8559
 
 #### Search
 
-(only ip is possible at this time)
+##### ip 
 
 ```sh
-zoomeye-cli -ip <ip>
+zoomeye-cli -ip 1.1.1.1
+```
+
+##### cidr
+
+```sh
+zoomeye-cli -cidr 1.1.1.1/24
 ```
 
 
@@ -47,6 +53,9 @@ zoomeye-cli -ip <ip>
 You need to have chrome or chromium for that, it will use chrome in headless mode.
 
 It still have some bugs sometimes and it's lot longer than with the api (around 20/25seconds).
+
+
+Only ip search is supported now...
 
 
 Noapi add [seebug]("https://www.seebug.org") vuln history.

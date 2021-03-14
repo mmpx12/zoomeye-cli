@@ -1,8 +1,8 @@
 package main
 
 import (
-  "flag"
   "fmt"
+  "github.com/speedata/optionparser"
   "os"
   . "zoomeye-cli/api"
   . "zoomeye-cli/cidr"
@@ -10,34 +10,41 @@ import (
 )
 
 func main() {
-  key := flag.String("init", "none", "your zoomeye api key")
-  ip := flag.String("ip", "none", "Ip to search")
-  cidr := flag.String("cidr", "none", "Cidr to scan")
-  info := flag.Bool("info", false, "info about your account")
-  noapi := flag.Bool("noapi", false, "Use zoomeye without api key")
-  flag.Parse()
-  if *noapi == true {
+  var key, ip, cidr string
+  var noapi, info bool
+  op := optionparser.NewOptionParser()
+  op.On("-k", "--init KEY", "Setup your zoomeye api key", &key)
+  op.On("-i", "--ip IP", "Search IP", &ip)
+  op.On("-c", "--cidr CIDR", "Search CIDR", &cidr)
+  op.On("-f", "--info", "Info about your account", &info)
+  op.On("-n", "--noapi", "Search without an api key", &noapi)
+  op.On("-h", "--help", "Show this help", help)
+  err := op.Parse()
+  if err != nil || len(os.Args) == 1 || len(op.Extra) != 0 {
+    help()
+  }
+  if noapi {
     port := true
-    if *ip == "none" {
-      fmt.Println("You should provide an ip.\nex: zoomeye -noapi -ip 1.1.1.1")
+    if ip == "" {
+      fmt.Println("You should provide an ip.\nex: zoomeye --noapi -i 1.1.1.1")
       os.Exit(1)
     }
-    PrintVuls(port, *ip)
+    PrintVuls(port, ip)
     os.Exit(0)
   }
-  if *key != "none" {
+  if key != "" {
     CreateApiFile(key)
     os.Exit(0)
   }
-  if *ip != "none" {
-    x, y := ApiCall(*ip)
+  if ip != "" {
+    x, y := ApiCall(ip)
     if x {
       ParseApi(y)
     }
     os.Exit(0)
   }
-  if *cidr != "none" {
-    ips := Cidr_to_ip(*cidr)
+  if cidr != "" {
+    ips := Cidr_to_ip(cidr)
     for _, ip := range ips {
       fmt.Println("\033[38;5;118mIP:       \t\033[33m" + ip)
       x, y := ApiCall(ip)
@@ -47,8 +54,24 @@ func main() {
       fmt.Println("\n")
     }
   }
-  if *info {
+  if info {
     GetInfo()
     os.Exit(0)
   }
+}
+
+func help() {
+  fmt.Println(`usage:
+  -k|--init  KEY              Setup your zoomeye api key
+  -i|--ip    IP               Search IP
+  -c|--cidr  CIDR             Search CIDR
+  -f|--info                   Info about your account
+  -n|--noapi                  Search without an api key
+  -h|--help                   Show this help
+
+exemples:
+zoomeye-cli --ip 1.1.1.1
+zoomeye-cli --cidr 1.1.1.1/24
+zoomeye-cli --noapi -i 1.1.1.1`)
+  os.Exit(1)
 }

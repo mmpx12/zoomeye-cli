@@ -6,6 +6,17 @@ For usage without api chrome or chromiu is required (will run in headless mode),
 
 hostname search will come later.
 
+## Usage
+
+```txt
+  -k|--init  KEY               Setup your zoomeye api key
+  -i|--ip    IP                Search IP
+  -c|--cidr  CIDR              Search CIDR
+  -f|--info                    Info about your account
+  -n|--noapi                   Search without an api key
+  -h|--help                    Show this help message and exit
+```
+
 ## API usages:
 
 ![api](.github/api.png)
@@ -15,7 +26,7 @@ hostname search will come later.
 first add your api key with:
 
 ```sh 
-zoomeye-cli -init "<API KEY>"
+zoomeye-cli --init "<API KEY>"
 
 ```
 
@@ -26,7 +37,7 @@ API key will be stored in `~/.zoomeye`
 You can check your credit and role with:
 
 ```sh
-zoomeye-cli -info
+zoomeye-cli --info
 Account: user
 Credits: 8559
 ```
@@ -36,13 +47,13 @@ Credits: 8559
 ##### ip 
 
 ```sh
-zoomeye-cli -ip 1.1.1.1
+zoomeye-cli -i 1.1.1.1
 ```
 
 ##### cidr
 
 ```sh
-zoomeye-cli -cidr 1.1.1.1/24
+zoomeye-cli -c 1.1.1.1/24
 ```
 
 
@@ -71,7 +82,7 @@ for check details go to "https://www.seebug.org/vuldb/ssvid-<ID>"
 #### Search
 
 ```
-zoomeye-cli -noapi -ip <ip>
+zoomeye-cli --noapi -i <ip>
 ```
 
 ## Installation

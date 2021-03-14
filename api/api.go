@@ -24,11 +24,11 @@ func GetApiKey() string {
   return x
 }
 
-func CreateApiFile(api *string) {
+func CreateApiFile(api string) {
   usr, _ := user.Current()
   f, _ := os.Create(usr.HomeDir + "/.zoomeye")
   defer f.Close()
-  f.WriteString(*api)
+  f.WriteString(api)
 }
 
 func ApiCall(ip string) (bool, []byte) {

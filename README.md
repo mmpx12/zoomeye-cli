@@ -9,9 +9,10 @@ hostname search will come later.
 ## Usage
 
 ```txt
-  -k|--init  KEY               Setup your zoomeye api key
-  -i|--ip    IP                Search IP
-  -c|--cidr  CIDR              Search CIDR
+  -k|--init    KEY             Setup your zoomeye api key
+  -i|--ip      IP              Search IP
+  -d|--domain  DOMAIN          Search DOMAIN
+  -c|--cidr    CIDR            Search CIDR
   -f|--info                    Info about your account
   -n|--noapi                   Search without an api key
   -h|--help                    Show this help message and exit
@@ -49,6 +50,15 @@ Credits: 8559
 ```sh
 zoomeye-cli -i 1.1.1.1
 ```
+
+##### Domain
+
+```sh
+zoomeye-cli -d 'archlinux.org'
+```
+
+![domai](.github/domain.png)
+
 
 ##### cidr
 

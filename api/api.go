@@ -31,9 +31,32 @@ func CreateApiFile(api string) {
   f.WriteString(api)
 }
 
-func ApiCall(ip string) (bool, []byte) {
+func DomainList(raw []byte) []string {
+  var input interface{}
+  result := make([]string, 0)
+  json.Unmarshal(raw, &input)
+  doms, _ := gojq.Parse(`[.matches[]|(if (.rdns_new|length) > 150 or .rdns_new == null then "" else .rdns_new end)]|unique|sort|@tsv`)
+  val := doms.Run(input)
+  for {
+    v, ok := val.Next()
+    if !ok {
+      break
+    }
+    res := fmt.Sprintf("%v\n", v)
+    result = append(result, res)
+  }
+  return result
+}
+
+func ApiCall(t string, q string) (bool, []byte) {
   apikey := GetApiKey()
-  req, _ := http.NewRequest("GET", "https://api.zoomeye.org/host/search?query=cidr:"+ip+"/32", nil)
+  var query string
+  if t == "singleip" {
+    query = "https://api.zoomeye.org/host/search?query=cidr:" + q + "/32"
+  } else if t == "domain" {
+    query = "https://api.zoomeye.org/host/search?query=site:" + q
+  }
+  req, _ := http.NewRequest("GET", query, nil)
   req.Header.Set("API-KEY", apikey)
   client := &http.Client{}
   resp, _ := client.Do(req)
@@ -52,12 +75,18 @@ func ApiCall(ip string) (bool, []byte) {
   return true, content
 }
 
-func ParseApi(raw []byte) {
+func ParseApi(q string, raw []byte) {
   var input interface{}
   result := make([]string, 0)
   infores := make([]string, 0)
   json.Unmarshal(raw, &input)
-  info, _ := gojq.Parse(`(if .matches[0].geoinfo.isp == "" or .matches[0].geoinfo.isp == null then "unknow" else .matches[0].geoinfo.isp end), (if .matches[0].geoinfo.country.names.en == null or .matches[0].geoinfo.country.names.en == "" then "unknow" else .matches[0].geoinfo.country.names.en end), (.matches |length)`)
+  var jq string
+  if q == "singleip" {
+    jq = `(if .matches[0].geoinfo.isp == "" or .matches[0].geoinfo.isp == null then "unknow" else .matches[0].geoinfo.isp end), (if .matches[0].geoinfo.country.names.en == null or .matches[0].geoinfo.country.names.en == "" then "unknow" else .matches[0].geoinfo.country.names.en end), (.matches |length)`
+  } else {
+    jq = `[.matches[]|select(.rdns_new=="` + q + `")][0]|(if .geoinfo.isp == "" or .geoinfo.isp == null then "unknow" else .geoinfo.isp end), (if .geoinfo.country.names.en == null or .geoinfo.country.names.en == "" then "unknow" else .geoinfo.country.names.en end), .ip`
+  }
+  info, _ := gojq.Parse(jq)
   val := info.Run(input)
   for {
     v, ok := val.Next()
@@ -67,10 +96,21 @@ func ParseApi(raw []byte) {
     res := fmt.Sprintf("%v\n", v)
     infores = append(infores, res)
   }
-  fmt.Printf("\033[38;5;118mCountry:    \t\033[33m%s\033[38;5;118mISP:        \t\033[33m%s\033[38;5;118mOpened port:\t\033[33m%s", infores[1], infores[0], infores[2])
+  if q == "singleip" {
+    fmt.Printf("\033[38;5;118mCountry:    \t\033[33m%s\033[38;5;118mISP:        \t\033[33m%s\033[38;5;118mOpened port:\t\033[33m%s", infores[1], infores[0], infores[2])
+  } else {
+    fmt.Printf("\033[38;5;118mIP:       \t\033[33m%s\033[38;5;118mCountry:    \t\033[33m%s\033[38;5;118mISP:        \t\033[33m%s", infores[2], infores[1], infores[0])
+  }
+
   // ports
-  query, _ := gojq.Parse(`.matches[]|[.portinfo.port, (if .protocol.transport == "" or .protocol.transport == null then "unknow" else .protocol.transport end), (if .portinfo.app == null or .portinfo.app == "" then (if .protocol.application == null or .protocol.application == "" or .protocol.application == "test" then .portinfo.service else (.protocol.application|ascii_downcase) end) else .portinfo.app end),( if .portinfo.version == null or .portinfo.version == "" then "unknow" else .portinfo.version end), .timestamp, if (.portinfo.banner | length) < 200 then .portinfo.banner else (.portinfo.banner|.[0:100])+" ..." end]|@tsv`)
-  value := query.Run(input)
+  var query string
+  if q == "singleip" {
+    query = `.matches[]|[.portinfo.port, (if .protocol.transport == "" or .protocol.transport == null then "unknow" else .protocol.transport end), (if .portinfo.app == null or .portinfo.app == "" then (if .protocol.application == null or .protocol.application == "" or .protocol.application == "test" then .portinfo.service else (.protocol.application|ascii_downcase) end) else .portinfo.app end),( if .portinfo.version == null or .portinfo.version == "" then "unknow" else .portinfo.version end), .timestamp, if (.portinfo.banner | length) < 200 then .portinfo.banner else (.portinfo.banner|.[0:100])+" ..." end]|@tsv`
+  } else {
+    query = `.matches[]|select(.rdns_new=="` + q + `")|[.portinfo.port, (if .protocol.transport == "" or .protocol.transport == null then "unknow" else .protocol.transport end), (if .portinfo.app == null or .portinfo.app == "" then (if .protocol.application == null or .protocol.application == "" or .protocol.application == "test" then .portinfo.service else (.protocol.application|ascii_downcase) end) else (if .portinfo.app == "" or .portinfo.app == null then "unknow" else .portinfo.app end) end),( if .portinfo.version == null or .portinfo.version == "" then "unknow" else .portinfo.version end), .timestamp, if (.portinfo.banner | length) < 200 then .portinfo.banner else (.portinfo.banner|.[0:100])+" ..." end]|@tsv`
+  }
+  ports, _ := gojq.Parse(query)
+  value := ports.Run(input)
   for {
     v, ok := value.Next()
     if !ok {
